@@ -86,8 +86,7 @@ class TitanicModel(nn.Module):
             nn.ReLU(),
             nn.Linear(25, 20),
             nn.ReLU(),
-            nn.Linear(20, 2),
-            nn.Softmax(dim=1),
+            nn.Linear(20, 2)
         )
 
     def forward(self, x):
@@ -131,10 +130,12 @@ def exec_validation(dataloader, model, loss_fn):
     size = len(dataloader.dataset)
     model.eval()
     total_loss, correct_count = 0, 0
+    soft_max_f =nn.Softmax(dim=1)
     with torch.no_grad():
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
-            pred = model(X)
+            output = model(X)
+            pred = soft_max_f(output)
             max, correct_idx = torch.max(y, dim=1)
             max, argmax = torch.max(pred, dim=1)
 
@@ -159,12 +160,14 @@ def exec_test(dataloader, model):
 
     row_data = []
     model.eval()
+    soft_max_f = nn.Softmax(dim=1)
     row_data.append("PassengerId,Survived")
 
     with torch.no_grad():
         for X, id in dataloader:
             X, id = X.to(device), id.to(device)
-            pred = model(X)
+            output = model(X)
+            pred = soft_max_f(output)
             max, argmax = torch.max(pred, dim=1)
 
             for i in range(len(argmax)):
