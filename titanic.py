@@ -45,17 +45,13 @@ class TitanicDataSet(Dataset):
             label = passId
         else:
             label = self.__data.at[idx, "Survived"]  # 0:死亡, 1:生存
-            if label == 0:
-                label_data = [1, 0]
-            else:
-                label_data = [0, 1]
         data = [sex, age, related_person,pclass]
         tdata = torch.tensor(data,dtype=torch.float32)
 
         if self.__is_test:
             return tdata, label
 
-        return tdata, torch.tensor(label_data, dtype=torch.float32)
+        return tdata, torch.tensor(label, dtype=torch.float32)
 
     def __trans_embarked(self,value):
         if value == "S":
@@ -103,7 +99,7 @@ def exec_train(dataloader, model, loss_fn, optimizer):
     :return: 損失値
     """
     for batch, (data, label) in enumerate(dataloader):
-        label = label.float()
+        label = label.long()
         X, label = data.to(device), label.to(device)
 
         # 損失誤差を計算
@@ -136,10 +132,10 @@ def exec_validation(dataloader, model, loss_fn):
             X, y = X.to(device), y.to(device)
             output = model(X)
             pred = soft_max_f(output)
-            max, correct_idx = torch.max(y, dim=1)
+            correct_idx = y
             max, argmax = torch.max(pred, dim=1)
 
-            total_loss += loss_fn(pred, y).item()
+            total_loss += loss_fn(output, y.long()).item()
             for i in range(len(argmax)):
                 if correct_idx[i] == argmax[i]:
                     correct_count += 1
@@ -188,8 +184,8 @@ EPOCH_NUM = 1000
 
 
 # データセットに関して
-TRAIN_DATA_PATH = r"PLEASE INPUT CSV PATH"
-TEST_DATA_PATH = r"PLEASE INPUT CSV PATH"
+TRAIN_DATA_PATH = r"Please Input Your CSV PATH"
+TEST_DATA_PATH = r"Please Input Your CSV PATH"
 TOTAL_TRAIN_DATA_SIZE = 891 # 学習データ全件数
 SPLIT_SIZE = 750 # 学習データの内、学習に利用するデータの数(残りは検証用に)
 TEST_DATA_SIZE = 418 # テストデータ全件数
